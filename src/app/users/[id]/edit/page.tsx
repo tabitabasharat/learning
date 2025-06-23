@@ -154,7 +154,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
               </div>
 
               <div className="flex space-x-4">
-                <Button type="submit" disabled={loading} className="text-black cursor-pointer border border-black">
+                   <Button type="submit" disabled={loading} className="text-black cursor-pointer border border-black">
                   {loading ? "Updating..." : "Update User"}
                 </Button>
                 <Link href="/users">
