@@ -39,21 +39,22 @@ export const authService = {
     throw new Error("Invalid credentials")
   },
 
-  async register(name: string, email: string, password: string): Promise<User> {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+async register(name: string, email: string, password: string): Promise<User> {
+  // Simulate API call
+  await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const user: User = {
-      id: Date.now().toString(),
-      name,
-      email,
-      role: "user",
-      createdAt: new Date().toISOString(),
-    }
+  const user: User & { password?: string } = {
+    id: Date.now().toString(),
+    name,
+    email,
+    role: "user",
+    createdAt: new Date().toISOString(),
+    password // Store password (only for demo purposes)
+  }
 
-    localStorage.setItem("user", JSON.stringify(user))
-    return user
-  },
+  localStorage.setItem("user", JSON.stringify(user))
+  return user
+},
 
   async forgotPassword(email: string): Promise<void> {
     // Simulate API call

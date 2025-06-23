@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to send reset email",
+        description: error instanceof Error ? error.message : "Failed to send reset email",
         variant: "destructive",
       })
     } finally {
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
         <Card className="mx-auto max-w-sm">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
-            <CardDescription>We've sent password reset instructions to {email}</CardDescription>
+            <CardDescription>We&apos;ve sent password reset instructions to {email}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center">
@@ -66,7 +66,7 @@ export default function ForgotPasswordPage() {
       <Card className="mx-auto max-w-sm">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
-          <CardDescription>Enter your email address and we'll send you a link to reset your password</CardDescription>
+          <CardDescription>Enter your email address and we&apos;ll send you a link to reset your password</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

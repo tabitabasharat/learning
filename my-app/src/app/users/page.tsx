@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
@@ -15,24 +15,24 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
-  useEffect(() => {
-    loadUsers()
-  }, [])
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       const userData = await userService.getUsers()
       setUsers(userData)
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load users",
+        description: error instanceof Error ? error.message : "Failed to load users",
         variant: "destructive",
       })
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
+
+  useEffect(() => {
+    loadUsers()
+  }, [loadUsers])
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this user?")) return
@@ -47,7 +47,7 @@ export default function UsersPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete user",
+        description: error instanceof Error ? error.message : "Failed to delete user",
         variant: "destructive",
       })
     }

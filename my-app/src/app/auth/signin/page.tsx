@@ -34,7 +34,7 @@ export default function SignInPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid credentials. Try admin@example.com / password",
+        description:error instanceof Error ? error.message : "Invalid credentials. Try admin@example.com / password",
         variant: "destructive",
       })
     } finally {

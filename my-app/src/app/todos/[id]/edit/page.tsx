@@ -1,173 +1,121 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Navbar } from "@/components/navbar"
+import { todoService } from "@/lib/auth"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { userService, type User } from "@/lib/auth"
-import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 
-export default function EditUserPage({ params }: { params: { id: string } }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [role, setRole] = useState<"admin" | "user">("user")
-  const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-  const router = useRouter()
+interface PageProps {
+  params: {
+    id: string
+  }
+  searchParams?: {
+    [key: string]: string | string[] | undefined
+  }
+}
+export default function EditTodoPage({ params }: PageProps) {
+  const [todo, setTodo] = useState({
+    title: "",
+    description: "",
+    completed: false
+  })
+  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+  const router = useRouter()
 
-  useEffect(() => {
-    loadUser()
-  }, [params.id])
-
-  const loadUser = async () => {
+  const loadTodo = useCallback(async () => {
     try {
-      const userData = await userService.getUserById(params.id)
-      if (userData) {
-        setUser(userData)
-        setName(userData.name)
-        setEmail(userData.email)
-        setRole(userData.role)
+      const todoData = await todoService.getTodoById(params.id)
+      if (todoData) {
+        setTodo({
+          title: todoData.title,
+          description: todoData.description,
+          completed: todoData.completed
+        })
       } else {
         toast({
           title: "Error",
-          description: "User not found",
-          variant: "destructive",
+          description: "Todo not found",
+          variant: "destructive"
         })
-        router.push("/users")
+        router.push("/todos")
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load user",
-        variant: "destructive",
-      })
-    } finally {
-      setInitialLoading(false)
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      await userService.updateUser(params.id, { name, email, role })
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      })
-      router.push("/users")
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update user",
-        variant: "destructive",
+        description: error instanceof Error ? error.message : "Failed to load todo",
+        variant: "destructive"
       })
     } finally {
       setLoading(false)
     }
+  }, [params.id, router, toast])
+
+  useEffect(() => {
+    loadTodo()
+  }, [loadTodo])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await todoService.updateTodo(params.id, {
+        ...todo,
+        updatedAt: new Date().toISOString()
+      })
+      toast({
+        title: "Success",
+        description: "Todo updated successfully"
+      })
+      router.push("/todos")
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update todo",
+        variant: "destructive"
+      })
+    }
   }
 
-  if (initialLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-          </div>
-        </div>
-      </div>
-    )
+  if (loading) {
+    return <div>Loading...</div>
   }
-
-  if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Link href="/users">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Users
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Edit User</h1>
-          <p className="text-gray-600">Update user information</p>
+    <div className="container mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-4 text-black">Edit Todo</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="title" className="text-black">Title</Label>
+          <Input
+            id="title"
+            value={todo.title}
+            onChange={(e) => setTodo({...todo, title: e.target.value})}
+            required
+          />
         </div>
-
-        <Card className="max-w-2xl">
-          <CardHeader>
-            <CardTitle>User Information</CardTitle>
-            <CardDescription>Update the user details</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                   className="bg-transparent text-black placeholder:text-gray-500 border-black border focus:border-none focus:ring-none"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                   className="bg-transparent text-black placeholder:text-gray-500 border-black border focus:border-none focus:ring-none"
-                  placeholder="john@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select value={role} onValueChange={(value: "admin" | "user") => setRole(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex space-x-4">
-                <Button type="submit" disabled={loading} className="text-black cursor-pointer border border-black">
-                  {loading ? "Updating..." : "Update User"}
-                </Button>
-                <Link href="/users">
-                  <Button type="button" variant="outline" className="cursor-pointer">
-                    Cancel
-                  </Button>
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+        <div>
+          <Label htmlFor="description" className="text-black">Description</Label>
+          <Textarea
+            id="description"
+            value={todo.description}
+            onChange={(e) => setTodo({...todo, description: e.target.value})}
+          />
+        </div>
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="completed"
+            checked={todo.completed}
+            onCheckedChange={(checked) => setTodo({...todo, completed: !!checked})}
+          />
+          <Label htmlFor="completed">Completed</Label>
+        </div>
+        <Button type="submit" className="border-white border cursor-pointer">Update Todo</Button>
+      </form>
     </div>
   )
 }

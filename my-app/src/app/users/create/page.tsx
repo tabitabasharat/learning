@@ -37,7 +37,7 @@ export default function CreateUserPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create user",
+        description:error instanceof Error ? error.message : "Failed to create user",
         variant: "destructive",
       })
     } finally {

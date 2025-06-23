@@ -43,17 +43,23 @@ export function generateId() {
   return Math.random().toString(36).substring(2, 15)
 }
 
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+export function debounce<F extends (...args: never[]) => unknown>(
+  func: F,
+  wait: number
+): (...args: Parameters<F>) => void {
   let timeout: NodeJS.Timeout
-  return (...args: Parameters<T>) => {
+  return (...args: Parameters<F>) => {
     clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
   }
 }
 
-export function throttle<T extends (...args: any[]) => any>(func: T, limit: number): (...args: Parameters<T>) => void {
-  let inThrottle: boolean
-  return (...args: Parameters<T>) => {
+export function throttle<F extends (...args: never[]) => unknown>(
+  func: F,
+  limit: number
+): (...args: Parameters<F>) => void {
+  let inThrottle = false
+  return (...args: Parameters<F>) => {
     if (!inThrottle) {
       func(...args)
       inThrottle = true
@@ -68,7 +74,6 @@ export function isValidEmail(email: string) {
 }
 
 export function isValidPassword(password: string) {
-  // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/
   return passwordRegex.test(password)
 }
@@ -102,37 +107,40 @@ export function randomBetween(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-export function arrayToObject<T>(array: T[], keyField: keyof T): Record<string, T> {
-  return array.reduce(
-    (obj, item) => {
-      const key = String(item[keyField])
-      obj[key] = item
-      return obj
-    },
-    {} as Record<string, T>,
-  )
+export function arrayToObject<T extends object, K extends keyof T>(
+  array: T[],
+  keyField: K
+): Record<string, T> {
+  return array.reduce((obj, item) => {
+    const key = String(item[keyField])
+    obj[key] = item
+    return obj
+  }, {} as Record<string, T>)
 }
 
-export function groupBy<T>(array: T[], keyField: keyof T): Record<string, T[]> {
-  return array.reduce(
-    (groups, item) => {
-      const key = String(item[keyField])
-      if (!groups[key]) {
-        groups[key] = []
-      }
-      groups[key].push(item)
-      return groups
-    },
-    {} as Record<string, T[]>,
-  )
+export function groupBy<T extends object, K extends keyof T>(
+  array: T[],
+  keyField: K
+): Record<string, T[]> {
+  return array.reduce((groups, item) => {
+    const key = String(item[keyField])
+    if (!groups[key]) {
+      groups[key] = []
+    }
+    groups[key].push(item)
+    return groups
+  }, {} as Record<string, T[]>)
 }
 
 export function unique<T>(array: T[]): T[] {
   return [...new Set(array)]
 }
 
-export function uniqueBy<T>(array: T[], keyField: keyof T): T[] {
-  const seen = new Set()
+export function uniqueBy<T extends object, K extends keyof T>(
+  array: T[],
+  keyField: K
+): T[] {
+  const seen = new Set<T[K]>()
   return array.filter((item) => {
     const key = item[keyField]
     if (seen.has(key)) {
@@ -143,13 +151,19 @@ export function uniqueBy<T>(array: T[], keyField: keyof T): T[] {
   })
 }
 
-export function omit<T extends Record<string, any>, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
+export function omit<T extends object, K extends keyof T>(
+  obj: T,
+  keys: K[]
+): Omit<T, K> {
   const result = { ...obj }
   keys.forEach((key) => delete result[key])
   return result
 }
 
-export function pick<T extends Record<string, any>, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+export function pick<T extends object, K extends keyof T>(
+  obj: T,
+  keys: K[]
+): Pick<T, K> {
   const result = {} as Pick<T, K>
   keys.forEach((key) => {
     if (key in obj) {

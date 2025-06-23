@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -26,35 +24,36 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const { toast } = useToast()
 
   useEffect(() => {
-    loadUser()
-  }, [params.id])
-
-  const loadUser = async () => {
-    try {
-      const userData = await userService.getUserById(params.id)
-      if (userData) {
-        setUser(userData)
-        setName(userData.name)
-        setEmail(userData.email)
-        setRole(userData.role)
-      } else {
+    const loadUser = async () => {
+      try {
+        const userData = await userService.getUserById(params.id)
+        if (userData) {
+          setUser(userData)
+          setName(userData.name)
+          setEmail(userData.email)
+          setRole(userData.role)
+        } else {
+          toast({
+            title: "Error",
+            description: "User not found",
+            variant: "destructive",
+          })
+          router.push("/users")
+        }
+      } catch (error) {
+        console.error("Failed to load user:", error)
         toast({
           title: "Error",
-          description: "User not found",
+          description: "Failed to load user",
           variant: "destructive",
         })
-        router.push("/users")
+      } finally {
+        setInitialLoading(false)
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load user",
-        variant: "destructive",
-      })
-    } finally {
-      setInitialLoading(false)
     }
-  }
+
+    loadUser()
+  }, [params.id, router, toast])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,7 +69,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update user",
+        description: error instanceof Error ? error.message : "Failed to update user",
         variant: "destructive",
       })
     } finally {
@@ -110,7 +109,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
 
         <Card className="max-w-2xl">
           <CardHeader>
-            <CardTitle className="text-black ">User Information</CardTitle>
+            <CardTitle className="text-black">User Information</CardTitle>
             <CardDescription className="text-black">Update the user details</CardDescription>
           </CardHeader>
           <CardContent>
@@ -121,7 +120,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
                   id="name"
                   type="text"
                   placeholder="John Doe"
-                   className="bg-transparent text-black placeholder:text-gray-500 border-black border focus:border-none focus:ring-none"
+                  className="bg-transparent text-black placeholder:text-gray-500 border-black border focus:border-none focus:ring-none"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -134,8 +133,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
                   id="email"
                   type="email"
                   placeholder="john@example.com"
-                   className="bg-transparent text-black placeholder:text-gray-500 border-black border focus:border-none focus:ring-none"
-                   
+                  className="bg-transparent text-black placeholder:text-gray-500 border-black border focus:border-none focus:ring-none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -150,7 +148,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
                   </SelectTrigger>
                   <SelectContent className="bg-white textblack">
                     <SelectItem value="user" className="text-black cursor-pointer">User</SelectItem>
-                    <SelectItem value="admin" className="text-black cursor-pointer ">Admin</SelectItem>
+                    <SelectItem value="admin" className="text-black cursor-pointer">Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

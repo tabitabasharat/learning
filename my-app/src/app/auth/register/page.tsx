@@ -43,10 +43,10 @@ export default function RegisterPage() {
         title: "Success",
         description: "Account created successfully!",
       })
-    } catch (error) {
+    }catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create account",
+        description: error instanceof Error ? error.message : "Failed to create account",
         variant: "destructive",
       })
     } finally {
